@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="User guide for Jazz Chart Viewer.">
+  <title>Help · Jazz Chart Viewer</title>
+  <link rel="stylesheet" href="./help.css">
+</head>
+<body>
+  <header class="help-header">
+    <div class="help-header-inner">
+      <a class="help-brand" href="./index.html"><span class="help-mark" aria-hidden="true">♭</span><span>Jazz Chart Viewer Help</span></a>
+      <div class="help-header-actions">
+        <a class="header-link" href="./help.html" lang="ja">日本語</a>
+        <a class="header-link primary" href="./index.html">Open viewer</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="help-layout">
+    <nav class="help-nav" aria-label="Help contents">
+      <strong>Contents</strong>
+      <a href="#quick-start">Quick start</a>
+      <a href="#import">Import songs</a>
+      <a href="#search">Find songs</a>
+      <a href="#transpose">Change key</a>
+      <a href="#views">Original / Expanded</a>
+      <a href="#display">Size and display</a>
+      <a href="#settings">Settings</a>
+      <a href="#storage">Storage and privacy</a>
+      <a href="#font">Font</a>
+      <a href="#troubleshooting">Troubleshooting</a>
+    </nav>
+
+    <main class="help-main">
+      <section class="hero">
+        <h1>Jazz Chart Viewer</h1>
+        <p>Display, transpose, and read iReal-format jazz chord charts directly in your browser. This guide covers the complete workflow from importing Jazz 1460 to expanding repeats and adjusting notation.</p>
+      </section>
+
+      <section id="quick-start" class="help-section">
+        <h2>Quick start</h2>
+        <ol class="quick-steps">
+          <li>Open the gear button and choose <strong>Import iReal data</strong>.</li>
+          <li>Paste an iReal shared link or choose a saved text or HTML file, then select <strong>Import</strong>.</li>
+          <li>Choose a song from the search box.</li>
+          <li>Use <strong>− / +</strong> to change key, and <strong>Auto / ♭ / ♯</strong> to control spelling.</li>
+          <li>Use <strong>Original</strong> for the written chart or <strong>Expanded</strong> for linear performance order.</li>
+        </ol>
+      </section>
+
+      <section id="import" class="help-section">
+        <h2>Import songs</h2>
+        <h3>Import Jazz 1460</h3>
+        <div class="link-box">
+          <p>Open the official iReal Pro community forum topic and find the <strong>Jazz 1460</strong> link in the first post.</p>
+          <a href="https://forums.irealpro.com/threads/jazz-1460-standards.12753/" target="_blank" rel="noopener">Open Jazz 1460 forum topic</a>
+        </div>
+        <ol>
+          <li>Copy the <strong>Jazz 1460</strong> link itself. Do not copy the browser's page address.</li>
+          <li>On a computer, right-click the link and choose <strong>Copy link address</strong> or <strong>Copy Link</strong>. On a phone or tablet, touch and hold it and choose <strong>Copy Link</strong>.</li>
+          <li>Confirm that the copied text begins with <code>irealb://</code> or <code>irealbook://</code>.</li>
+          <li>In the viewer, open <strong>Settings → Import iReal data</strong>, paste the link, and select <strong>Import</strong>.</li>
+        </ol>
+        <div class="warning"><strong>Replacing an older full playlist</strong>When replacing Jazz 1410 or another older complete Jazz playlist, use <strong>Delete all songs</strong> first so obsolete or renamed charts do not remain.</div>
+
+        <h3>Import other iReal data</h3>
+        <p>You can paste any <code>irealb://</code> or <code>irealbook://</code> shared link, or choose a saved <code>.txt</code>, <code>.html</code>, or <code>.htm</code> file.</p>
+        <p>Imports are merged with the current library. A chart with the same title and composer replaces the existing copy; other songs remain.</p>
+      </section>
+
+      <section id="search" class="help-section">
+        <h2>Find and select a song</h2>
+        <p>Select the search box to show all imported songs, then type part of a title. Choose a result with the mouse or touch. With a keyboard, use <strong>Up / Down</strong> to move, <strong>Enter</strong> to select, and <strong>Escape</strong> to close the list.</p>
+        <div class="note"><strong>When you change songs</strong>The temporary transposition resets to the selected song's original key.</div>
+      </section>
+
+      <section id="transpose" class="help-section">
+        <h2>Change key and note spelling</h2>
+        <table class="control-table">
+          <tbody>
+            <tr><th>− / +</th><td>Transpose the displayed key and every chord down or up by one semitone.</td></tr>
+            <tr><th>Auto</th><td>Choose flats or sharps according to the transposed key.</td></tr>
+            <tr><th>♭</th><td>Prefer flat spellings, such as B♭ and E♭.</td></tr>
+            <tr><th>♯</th><td>Prefer sharp spellings, such as F♯ and C♯.</td></tr>
+          </tbody>
+        </table>
+        <p>Transposition affects only the displayed chart. The imported source data is not modified.</p>
+      </section>
+
+      <section id="views" class="help-section">
+        <h2>Original and Expanded views</h2>
+        <div class="mode-grid">
+          <article class="mode-panel">
+            <h3>Original</h3>
+            <p>Shows the chart as written, including repeat signs, first and second endings, D.C., D.S., Fine, Segno, To Coda, and Coda markings.</p>
+          </article>
+          <article class="mode-panel">
+            <h3>Expanded</h3>
+            <p>Turns the navigation into a linear top-to-bottom sequence that can be read in performance order.</p>
+          </article>
+        </div>
+        <p>Expanded view resolves written repeats and numbered endings. Supported D.C. and D.S. instructions are followed through Fine or Coda when those markings are present. Repeat dots and ending brackets are removed from the expanded sequence, while musical section boundaries remain visible as double barlines.</p>
+        <div class="warning"><strong>Use Original as the reference</strong>Expanded view follows standard navigation rules encoded in the imported chart. If a source uses unusual text instructions or malformed repeat data, compare it with Original and treat Original as authoritative.</div>
+      </section>
+
+      <section id="display" class="help-section">
+        <h2>Size and screen controls</h2>
+        <table class="control-table">
+          <tbody>
+            <tr><th>Scale slider</th><td>Sets a manual chart size and turns Auto off.</td></tr>
+            <tr><th>Auto</th><td>Fits the chart to the available viewport again.</td></tr>
+            <tr><th>Fullscreen</th><td>Enters or exits browser fullscreen where supported.</td></tr>
+          </tbody>
+        </table>
+        <p>The layout keeps four measures per row, including on mobile screens, and scales the whole page to fit. Time-signature changes, rehearsal marks, double barlines, repeats, endings, Segno, Coda, and final barlines are preserved where present in the source chart.</p>
+      </section>
+
+      <section id="settings" class="help-section">
+        <h2>Settings</h2>
+        <p>Open the gear button to:</p>
+        <ul>
+          <li>choose the display style for major, minor, half-diminished, and diminished chords;</li>
+          <li>import more iReal data;</li>
+          <li>delete all imported songs;</li>
+          <li>reset display settings to their defaults.</li>
+        </ul>
+        <p><strong>Delete all songs</strong> removes the imported library but leaves the built-in demonstration chart. <strong>Reset settings</strong> does not delete imported songs.</p>
+      </section>
+
+      <section id="storage" class="help-section">
+        <h2>Local storage and privacy</h2>
+        <p>Songs and settings are stored locally in IndexedDB for the exact site URL. Jazz Chart Viewer does not upload your song library.</p>
+        <p>Re-import songs after clearing browser data, changing browser or device, or opening the viewer at a different domain or repository path. Private or incognito mode may discard the library when the private session ends.</p>
+      </section>
+
+      <section id="font" class="help-section">
+        <h2>MuseJazz Text font <small>(optional)</small></h2>
+        <p>The viewer tries to load MuseJazz Text automatically. To install it locally:</p>
+        <ol>
+          <li><a href="https://raw.githubusercontent.com/musescore/MuseScore/c1ad658dec3f29ef7e089a5915c7eed91a7e5349/fonts/musejazz/MuseJazzText.otf" target="_blank" rel="noopener">Download MuseJazzText.otf</a>.</li>
+          <li>Open it and choose <strong>Install</strong> on Windows or <strong>Install Font</strong> on macOS. On Linux, copy it to <code>~/.local/share/fonts/</code> and run <code>fc-cache -f</code>.</li>
+          <li>Restart the browser.</li>
+        </ol>
+        <p>If the font is unavailable, the viewer uses the standard <code>△</code> symbol instead.</p>
+      </section>
+
+      <section id="troubleshooting" class="help-section">
+        <h2>Troubleshooting</h2>
+        <dl class="faq">
+          <dt>The import says no iReal data was found.</dt>
+          <dd>Confirm that the pasted text begins with <code>irealb://</code> or <code>irealbook://</code> and was not truncated.</dd>
+
+          <dt>The pasted text begins with <code>https://forums.irealpro.com/</code>.</dt>
+          <dd>You copied the forum page address. Copy the <strong>Jazz 1460</strong> link itself.</dd>
+
+          <dt>Selecting Jazz 1460 opens iReal Pro.</dt>
+          <dd>Return to the forum and copy the link with right-click or touch-and-hold instead of opening it.</dd>
+
+          <dt>Imported songs disappeared.</dt>
+          <dd>Browser data may have been cleared, or the site's URL changed. Import the playlist again.</dd>
+
+          <dt>The chart is too small or too large.</dt>
+          <dd>Select <strong>Auto</strong>, or move the Scale slider to set a manual size.</dd>
+
+          <dt>Expanded order looks wrong.</dt>
+          <dd>Compare with Original and check whether the source chart uses nonstandard or incomplete navigation markings.</dd>
+
+          <dt>The major symbol looks different.</dt>
+          <dd>Install MuseJazz Text, or continue using the standard <code>△</code> fallback.</dd>
+        </dl>
+      </section>
+
+      <footer class="help-footer">
+        <p><a href="./LICENSE">Application license</a> · <a href="./THIRD_PARTY_NOTICES.md">Third-party notices</a> · <a href="./licenses/MuseJazzText-OFL-1.1.txt">MuseJazz Text license</a></p>
+        <p>Jazz Chart Viewer is independent and is not affiliated with or endorsed by the owners of iReal Pro. Jazz 1460 and its chart data are not redistributed with the viewer.</p>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>
