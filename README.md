@@ -2,6 +2,8 @@
 
 A static browser application for importing and displaying iReal Pro chord-chart data. It can be hosted on GitHub Pages or opened directly from `index.html` after downloading the files.
 
+Published site: [https://over-keys.github.io/Jazz-Chart-Viewer/](https://over-keys.github.io/Jazz-Chart-Viewer/)
+
 ## GitHub Pages deployment
 
 Place all files and folders in this directory at the root of the selected GitHub Pages publishing source. Keep `index.html` and `.nojekyll` at that root.
