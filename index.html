@@ -3257,7 +3257,7 @@ textarea:focus-visible {
   </dialog>
 
   <script>
-/* Jazz Chart Viewer v0.1.79 static bundle */
+/* Jazz Chart Viewer v0.1.82 static bundle */
 
 const __names = (() => {
 'use strict';
@@ -3431,8 +3431,21 @@ function expandChartBars(sourceBars) {
     const endingTarget = lower.match(/al\s+(\d+)(?:st|nd|rd|th)\s+end(?:ing|\.)?/i);
 
     if (endingTarget) {
-      output.push(...pathToEndingAndFine(source, jumpStart, Number(endingTarget[1])));
-      cursor = terminalIndex + 1;
+      const targetEnding = Number(endingTarget[1]);
+      const independentCodaStart = findIndependentCodaAfterEndingDirective(
+        source, jumpStart, jump.index, terminalIndex
+      );
+      if (independentCodaStart >= 0) {
+        // Some charts direct the return to a numbered ending, omit To Coda,
+        // and place an independent Coda section after the printed directive.
+        // In that structure, complete the requested ending (Fine is not a stop
+        // unless the directive says al Fine), then continue at the Coda.
+        output.push(...pathToEnding(source, jumpStart, targetEnding));
+        cursor = independentCodaStart;
+      } else {
+        output.push(...pathToEndingAndFine(source, jumpStart, targetEnding));
+        cursor = terminalIndex + 1;
+      }
       continue;
     }
 
@@ -3806,6 +3819,12 @@ function findToCoda(bars, start, before) {
   return -1;
 }
 
+function findIndependentCodaAfterEndingDirective(bars, start, jumpIndex, terminalIndex) {
+  if (findToCoda(bars, start, jumpIndex) >= start) return -1;
+  const after = Math.max(jumpIndex, terminalIndex);
+  return bars.findIndex((bar, index) => index > after && bar.codaStart);
+}
+
 function hasSymbol(bar, value) {
   return (bar.symbols || []).some((symbol) => symbol.toLowerCase() === value.toLowerCase());
 }
@@ -4023,7 +4042,7 @@ function parseSongBody(body, protocol = 'irealb://') {
     importedAt: Date.now(),
     source: 'ireal',
     sourceRecord: { protocol, body },
-    parserVersion: 16
+    parserVersion: 18
   };
 }
 
@@ -4199,6 +4218,7 @@ function parseChart(raw, initialTimeSignature = '4/4') {
   let cellCursor = 0;
   let smallChordMode = false;
   let pendingFermataCount = 0;
+  let pendingAlternates = [];
   const parserWarnings = [];
   const groupingByTop = { 5: null, 7: null };
 
@@ -4226,6 +4246,13 @@ function parseChart(raw, initialTimeSignature = '4/4') {
   );
 
   const push = (force = false) => {
+    // Alternate chords can precede the harmony they annotate. If a boundary
+    // arrives before any primary harmony, the source is incomplete; do not
+    // leak those alternates into the following measure.
+    if (pendingAlternates.length > 0) {
+      addParserWarning(`Unattached alternate chord${pendingAlternates.length === 1 ? '' : 's'} ${pendingAlternates.map((item) => item.value).join(', ')} were ignored at a measure boundary.`);
+      pendingAlternates = [];
+    }
     // A fermata is normally a prefix for the following chord. Preserve an
     // unattached marker as a legacy centered symbol rather than discarding it.
     if (pendingFermataCount > 0) {
@@ -4240,6 +4267,7 @@ function parseChart(raw, initialTimeSignature = '4/4') {
     }
     current = newBar();
     lastChordSlot = null;
+    pendingAlternates = [];
     cellCursor = 0;
     if (pendingTimeSignature) {
       timeSignature = pendingTimeSignature;
@@ -4253,6 +4281,40 @@ function parseChart(raw, initialTimeSignature = '4/4') {
     if (hasWrittenContent()) push();
   };
 
+  const attachAlternate = (slot, alternate, cell) => {
+    const alternateEntry = {
+      chord: alternate.value,
+      cell: Math.max(0, Number(cell) || 0)
+    };
+    slot.alternates.push(alternateEntry);
+    current.alternateChords.push({ ...alternateEntry });
+    if (alternate.legacy) {
+      addParserWarning(`Legacy non-standard chord token "${alternate.legacy}" was normalized as ${alternate.value}.`);
+    }
+  };
+
+  const ensureAlternateHost = (cell = cellCursor) => {
+    if (lastChordSlot) return lastChordSlot;
+    const slot = {
+      chord: '',
+      alternates: [],
+      cell: Math.max(0, Number(cell) || 0),
+      small: false,
+      fermata: false,
+      hidden: true
+    };
+    current.chordSlots.push(slot);
+    lastChordSlot = slot;
+    return slot;
+  };
+
+  const attachPendingAlternatesTo = (slot) => {
+    for (const alternate of pendingAlternates) {
+      attachAlternate(slot, alternate, alternate.cell);
+    }
+    pendingAlternates = [];
+  };
+
   const addPrimaryChord = (value) => {
     current.chords.push(value);
     const slot = {
@@ -4264,6 +4326,7 @@ function parseChart(raw, initialTimeSignature = '4/4') {
     };
     pendingFermataCount = 0;
     current.chordSlots.push(slot);
+    attachPendingAlternatesTo(slot);
     lastChordSlot = slot;
     cellCursor += 1;
   };
@@ -4402,8 +4465,19 @@ function parseChart(raw, initialTimeSignature = '4/4') {
       continue;
     }
     if (token === 'r') {
+      // `r` represents two visible measures. Alternate chords can be written
+      // immediately before it and belong to the first repeat measure. Preserve
+      // them across any structural-bar push instead of dropping them at the
+      // boundary.
+      const repeatAlternates = pendingAlternates;
+      pendingAlternates = [];
       if (hasContent()) push();
       current.repeatTwoBars = true;
+      if (repeatAlternates.length) {
+        pendingAlternates = repeatAlternates;
+        const host = ensureAlternateHost(Math.min(...repeatAlternates.map((item) => Number(item.cell) || 0)));
+        attachPendingAlternatesTo(host);
+      }
       current.cellCount = Math.max(1, cellCursor || 4);
       push(true);
       current.repeatTwoBarsContinuation = true;
@@ -4421,15 +4495,23 @@ function parseChart(raw, initialTimeSignature = '4/4') {
         // cell of their own. Immediately following a regular chord they share
         // that chord's cell; after one or more spaces they retain those source
         // positions independently of the regular harmony below.
-        const alternateEntry = {
-          chord: alternate.value,
-          cell: Math.max(Number(lastChordSlot.cell) || 0, cellCursor - 1)
-        };
-        lastChordSlot.alternates.push(alternateEntry);
-        current.alternateChords.push({ ...alternateEntry });
-        if (alternate.legacy) {
-          addParserWarning(`Legacy non-standard chord token "${alternate.legacy}" was normalized as ${alternate.value}.`);
-        }
+        attachAlternate(
+          lastChordSlot,
+          alternate,
+          Math.max(Number(lastChordSlot.cell) || 0, cellCursor - 1)
+        );
+      } else if (current.repeatTwoBars || current.repeatTwoBarsContinuation) {
+        // A two-measure repeat has no ordinary chord slot, but alternates can
+        // still annotate either represented measure. Use an invisible host so
+        // the alternate survives parsing and participates in the normal cell
+        // layout without drawing an extra harmony symbol.
+        const host = ensureAlternateHost(cellCursor);
+        attachAlternate(host, alternate, cellCursor);
+      } else {
+        // iReal charts can place an alternate before a one-measure repeat, for
+        // example `(Ab-7)x (Db7)`. Keep it until the following primary token is
+        // parsed instead of silently dropping it.
+        pendingAlternates.push({ ...alternate, cell: cellCursor });
       }
       i += alternate.length;
       continue;
@@ -5398,6 +5480,19 @@ function resolveMusicalCellLayout(bar, chordSlots, fallbackMeter = '4/4') {
 
   const hasExplicitHold = chordSlots.some((slot) => slot.chord === '/');
   const hasMeasureRepeat = chordSlots.some((slot) => slot.chord === '%' || slot.chord === '%%');
+  const [meterTopText = '4', meterBottomText = '4'] = String(meter).split('/');
+  const meterTop = Math.max(1, Number.parseInt(meterTopText, 10) || 4);
+  const meterBottom = Math.max(1, Number.parseInt(meterBottomText, 10) || 4);
+  const sourceCellCount = Math.max(
+    1,
+    Math.max(0, Number(bar.cellCount) || 0) - leadingOffset,
+    rawMaximum + 1
+  );
+  const evenlySpacedBeatStarts = (count) => Array.from(
+    { length: count },
+    (_, index) => Math.round(index * totalCells / count)
+  );
+
   if (!hasExplicitHold && !hasMeasureRepeat && chordSlots.length === 1) {
     // A lone harmony always begins on beat 1. Whitespace before it is only
     // source-layout padding and must never move the chord into the measure.
@@ -5413,6 +5508,29 @@ function resolveMusicalCellLayout(bar, chordSlots, fallbackMeter = '4/4') {
       ? meterGrid.groupDurations[0] * subdivisionsPerUnit
       : Math.floor(totalCells / 2);
     starts = [0, secondStart];
+  } else if (
+    meterTop === 3 && meterBottom === 4 && chordSlots.length === 2 &&
+    rawCells[0] === 0 && rawCells[1] * 2 === sourceCellCount
+  ) {
+    // A four-cell 3/4 source bar split into two equal halves represents
+    // 1.5 beats per chord: beat 1 and the second half of beat 2.
+    starts = [0, Math.floor(totalCells / 2)];
+  } else if (
+    meterTop === 3 && meterBottom === 4 && chordSlots.length === 3 &&
+    !hasMeasureRepeat
+  ) {
+    // Three occupied harmony cells in 3/4 are one event per beat. iReal source
+    // spacing can be [0,1,3] or [0,2,3], but neither should pull the final
+    // event onto an eighth-note subdivision.
+    starts = evenlySpacedBeatStarts(3);
+  } else if (
+    meterTop === 5 && meterBottom === 4 && chordSlots.length === 5 &&
+    !hasMeasureRepeat
+  ) {
+    // Five occupied harmony cells in 5/4 represent beats 1 through 5. Meter
+    // grouping (3+2 or 2+3) affects the main two-part division, not a full
+    // five-cell beat-by-beat pattern.
+    starts = evenlySpacedBeatStarts(5);
   }
 
   // Preserve source order even in malformed charts and avoid zero-width slots.
@@ -5432,6 +5550,19 @@ function resolveMusicalCellLayout(bar, chordSlots, fallbackMeter = '4/4') {
     return { startCell, span };
   });
 
+  const repeatAlternateOffsets = alternateSources.map((alternate, index) =>
+    alternateRawCells[index] - rawCells[alternate.slotIndex]
+  );
+  const usesCompactMeasureRepeatAlternates =
+    chordSlots.length === 1 &&
+    (chordSlots[0].chord === '%' || bar.repeatTwoBars || bar.repeatTwoBarsContinuation) &&
+    alternateSources.length > 0 &&
+    alternateSources.every((alternate) => alternate.slotIndex === 0) &&
+    repeatAlternateOffsets.every((offset) => offset === 0 || offset === 1);
+  const repeatSecondStart = meterGrid.groupCount === 2
+    ? meterGrid.groupDurations[0] * subdivisionsPerUnit
+    : Math.floor(totalCells / 2);
+
   const mappedAlternates = alternateSources.map((alternate, index) => {
     const sourceCell = alternateRawCells[index];
     const regularSourceCell = rawCells[alternate.slotIndex];
@@ -5443,10 +5574,16 @@ function resolveMusicalCellLayout(bar, chordSlots, fallbackMeter = '4/4') {
     // preserving its source-cell offsets. This keeps sequences such as
     // 3, 3&, 4, 4& together instead of pulling them toward beat 2.
     const normalisationShift = regularDisplayCell - regularMappedCell;
-    const startCell = Math.max(0, Math.min(
-      totalCells - 1,
-      mapRawCell(sourceCell) + normalisationShift
-    ));
+    let startCell;
+    if (usesCompactMeasureRepeatAlternates) {
+      // A one-measure repeat occupies the whole bar. Its compact alternate
+      // cells use 0 for the first half and 1 for the second half, so `x (C7)`
+      // places C7 on beat 3 in 4/4, and `(Ab-7)x (Db7)` yields beats 1 and 3.
+      startCell = repeatAlternateOffsets[index] === 0 ? regularDisplayCell : repeatSecondStart;
+    } else {
+      startCell = mapRawCell(sourceCell) + normalisationShift;
+    }
+    startCell = Math.max(0, Math.min(totalCells - 1, startCell));
     return { ...alternate, startCell };
   }).sort((a, b) => a.startCell - b.startCell || a.slotIndex - b.slotIndex);
 
@@ -5474,7 +5611,8 @@ function normaliseChordSlots(bar) {
       alternates: normaliseAlternateEntries(slot),
       cell: Number.isFinite(slot.cell) ? Number(slot.cell) : null,
       small: Boolean(slot.small),
-      fermata: Boolean(slot.fermata)
+      fermata: Boolean(slot.fermata),
+      hidden: Boolean(slot.hidden)
     }));
   }
   return (bar.chords?.length ? bar.chords : ['']).map((chord, index) => ({
@@ -5499,6 +5637,7 @@ function renderAlternateLayer(groups, song, notation, { semitones, accidental },
 }
 
 function renderChordSlot(slot, song, notation, { semitones, accidental }, slotCount = 1, slotIndex = 0, usesCellGrid = false, startCell = 0, span = 1, totalCells = 1) {
+  if (slot.hidden) return '';
   const formatted = formatChord(slot.chord, semitones, accidental, notation, song.key);
   const repeatClass = slot.chord === '/' || slot.chord === '%' || slot.chord === '%%' ? ' repeat-glyph' : '';
   const slashClass = formatted !== '/' && formatted.includes('/') ? ' has-slash' : '';
