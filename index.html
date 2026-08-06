@@ -3144,6 +3144,81 @@ textarea:focus-visible {
 .chart-warning {
   font-weight: 400;
 }
+
+/* Keep the compact control row swipeable without taking space for a scrollbar. */
+.toolbar-controls-shell {
+  position: relative;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.toolbar-controls-shell::before,
+.toolbar-controls-shell::after {
+  content: "";
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.toolbar-controls-shell::before {
+  left: 0;
+  background: linear-gradient(90deg, rgb(255 255 255 / 96%), rgb(255 255 255 / 0%));
+}
+
+.toolbar-controls-shell::after {
+  right: 0;
+  background: linear-gradient(270deg, rgb(255 255 255 / 96%), rgb(255 255 255 / 0%));
+}
+
+.toolbar-controls-shell.can-scroll-left::before,
+.toolbar-controls-shell.can-scroll-right::after {
+  opacity: 1;
+}
+
+@media (max-width: 820px) {
+  .toolbar-controls-shell {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .toolbar-controls {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none;
+  }
+
+  .toolbar-controls::-webkit-scrollbar {
+    display: none;
+  }
+
+  .toolbar-controls > * {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 520px) {
+  #fullscreen {
+    display: none !important;
+  }
+}
+
+@media (max-width: 350px) {
+  :root {
+    --compact-toolbar-height: 76px;
+  }
+
+  .toolbar {
+    grid-template-rows: 32px 30px;
+  }
+}
 </style>
 </head>
 <body>
@@ -3156,7 +3231,8 @@ textarea:focus-visible {
         </div>
       </div>
 
-      <div class="toolbar-controls">
+      <div id="toolbarControlsShell" class="toolbar-controls-shell">
+        <div id="toolbarControls" class="toolbar-controls">
         <div class="toolbar-group key-group" aria-label="Transpose">
           <span class="compact-label">Key</span>
           <button id="keyDown" class="icon-button" type="button" aria-label="Transpose down one semitone">−</button>
@@ -3188,6 +3264,7 @@ textarea:focus-visible {
           <button id="fullscreen" class="icon-button utility" type="button" title="Fullscreen" aria-label="Fullscreen">⛶</button>
           <a id="helpButton" class="icon-button utility help-button" href="./help.html" target="_blank" rel="noopener" title="ヘルプ" aria-label="ヘルプ">?</a>
           <button id="settingsButton" class="icon-button utility" type="button" title="Settings" aria-label="Settings">⚙</button>
+        </div>
         </div>
       </div>
     </header>
@@ -5775,11 +5852,20 @@ const state = {
 state.selectedId = state.songs[0]?.id ?? DEMO_SONG.id;
 
 const el = Object.fromEntries([
-  'search', 'searchOptions', 'keyDown', 'keyUp', 'keyValue', 'accidentalGroup', 'viewModeGroup', 'scale', 'scaleAuto',
+  'search', 'searchOptions', 'toolbarControls', 'toolbarControlsShell', 'keyDown', 'keyUp', 'keyValue', 'accidentalGroup', 'viewModeGroup', 'scale', 'scaleAuto',
   'settingsButton', 'chartViewport', 'chartScaleFrame', 'chartPage', 'importDialog', 'settingsDialog',
   'importText', 'importFile', 'importError', 'importConfirm', 'deleteAll', 'majorStyle', 'minorStyle',
   'halfDimStyle', 'dimStyle', 'settingsClose', 'importClose', 'fontNotice', 'fontNoticeClose'
 ].map((id) => [id, document.getElementById(id)]));
+
+function updateToolbarScrollHint() {
+  const controls = el.toolbarControls;
+  const shell = el.toolbarControlsShell;
+  if (!controls || !shell) return;
+  const maxScroll = Math.max(0, controls.scrollWidth - controls.clientWidth);
+  shell.classList.toggle('can-scroll-left', controls.scrollLeft > 1);
+  shell.classList.toggle('can-scroll-right', controls.scrollLeft < maxScroll - 1);
+}
 
 function currentSong() {
   return state.songs.find((song) => song.id === state.selectedId) ?? DEMO_SONG;
@@ -5790,6 +5876,7 @@ function render() {
   renderSearchOptions();
   renderChart();
   queueFit();
+  requestAnimationFrame(updateToolbarScrollHint);
 }
 
 function renderToolbar() {
@@ -5936,6 +6023,7 @@ function loadJson(key, fallback) {
 }
 
 el.search.addEventListener('focus', openSearch);
+el.toolbarControls?.addEventListener('scroll', updateToolbarScrollHint, { passive: true });
 el.search.addEventListener('input', () => {
   state.searchOpen = true;
   state.searchActiveIndex = -1;
@@ -6107,6 +6195,7 @@ window.addEventListener('resize', () => {
   } else {
     queueFit();
   }
+  updateToolbarScrollHint();
 });
 el.fontNoticeClose?.addEventListener('click', () => {
   el.fontNotice.hidden = true;
