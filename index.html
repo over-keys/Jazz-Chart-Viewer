@@ -3202,9 +3202,66 @@ textarea:focus-visible {
   .toolbar-controls > * {
     flex: 0 0 auto;
   }
+
+  .utility,
+  #settingsButton {
+    width: 36px;
+    min-width: 36px;
+    line-height: 1;
+  }
 }
 
 @media (max-width: 520px) {
+  .toolbar-controls {
+    gap: 5px;
+  }
+
+  .key-group .icon-button {
+    width: 32px;
+    min-width: 32px;
+  }
+
+  .key-value {
+    width: 38px;
+    min-width: 38px;
+  }
+
+  #accidentalGroup button {
+    width: 32px;
+    min-width: 32px;
+    padding-inline: 0;
+  }
+
+  #accidentalGroup button:first-child {
+    width: 38px;
+    min-width: 38px;
+  }
+
+  .view-mode-group button {
+    width: 50px;
+    min-width: 50px;
+    padding-inline: 5px;
+    font-size: 11px;
+  }
+
+  #scale {
+    width: 76px;
+    min-width: 76px;
+  }
+
+  .scale-group .text-button {
+    width: 40px;
+    min-width: 40px;
+    padding-inline: 4px;
+    font-size: 11px;
+  }
+
+  .utility,
+  #settingsButton {
+    width: 36px;
+    min-width: 36px;
+  }
+
   #fullscreen {
     display: none !important;
   }
@@ -3263,7 +3320,7 @@ textarea:focus-visible {
         <div class="utility-group">
           <button id="fullscreen" class="icon-button utility" type="button" title="Fullscreen" aria-label="Fullscreen">⛶</button>
           <a id="helpButton" class="icon-button utility help-button" href="./help.html" target="_blank" rel="noopener" title="ヘルプ" aria-label="ヘルプ">?</a>
-          <button id="settingsButton" class="icon-button utility" type="button" title="Settings" aria-label="Settings">⚙</button>
+          <button id="settingsButton" class="icon-button utility" type="button" title="Settings" aria-label="Settings">⚙︎</button>
         </div>
         </div>
       </div>
