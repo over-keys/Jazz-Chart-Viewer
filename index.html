@@ -4042,6 +4042,12 @@ function finishLinearBars(
 
   for (let i = 0; i < result.length; i += 1) {
     const bar = result[i];
+    const fineSharesEnd = Boolean(
+      removeConsumedNavigation &&
+      bar.endMarker &&
+      (bar.symbols || []).some((symbol) => /^fine$/i.test(symbol))
+    );
+    if (fineSharesEnd) bar.suppressEndMarker = true;
 
     // Repeat-count staff text has already been consumed by linearisation.
     bar.symbols = bar.symbols.filter((symbol) => !/^\d+x$/i.test(symbol));
@@ -4051,9 +4057,8 @@ function finishLinearBars(
     // been converted into linear order. Standalone To Coda/Coda marks remain
     // visible because no navigation route consumes them.
     if (removeConsumedNavigation) {
-      const keepFineWithEnd = Boolean(bar.endMarker || bar.endMarkerSource);
       bar.symbols = bar.symbols.filter((symbol) =>
-        (!/^fine$/i.test(symbol) || keepFineWithEnd) &&
+        !/^fine$/i.test(symbol) &&
         !/^segno$/i.test(symbol) &&
         !(suppressCodaNavigation && /^to coda$/i.test(symbol))
       );
@@ -4074,27 +4079,27 @@ function finishLinearBars(
   // final occurrence reached by the linear route.
   retainFinalEndMarkerOccurrences(result);
   // A standalone Fine inside an ordinary repeat is a visual ending marker,
-  // not a navigation destination. Keep it only on the final occurrence. When
-  // Fine and End share a bar, Fine wins and must also survive a consumed
-  // D.C./D.S. route on that final occurrence.
+  // not a navigation destination. Keep it only on the final occurrence.
+  // Fine consumed by D.C./D.S. remains hidden; when that bar also has End,
+  // the functional stop is consumed as well, so neither marker is shown.
   if (!removeConsumedNavigation) retainFinalFineOccurrences(result);
-  else retainFinalFineOccurrences(result, (bar) => Boolean(bar.endMarker || bar.endMarkerSource));
+  else result.forEach((bar) => {
+    if (bar.suppressEndMarker) bar.endMarker = false;
+  });
   if (result.length) result[result.length - 1].final = true;
 
   return result;
 }
 
-function retainFinalFineOccurrences(bars, includeBar = () => true) {
+function retainFinalFineOccurrences(bars) {
   const lastBySource = new Map();
   bars.forEach((bar, index) => {
-    if (!includeBar(bar)) return;
     if (!(bar.symbols || []).some((symbol) => /^fine$/i.test(symbol))) return;
     const sourceIndex = Number.isInteger(bar._sourceIndex) ? bar._sourceIndex : index;
     lastBySource.set(sourceIndex, index);
   });
 
   bars.forEach((bar, index) => {
-    if (!includeBar(bar)) return;
     if (!(bar.symbols || []).some((symbol) => /^fine$/i.test(symbol))) return;
     const sourceIndex = Number.isInteger(bar._sourceIndex) ? bar._sourceIndex : index;
     if (lastBySource.get(sourceIndex) !== index) {
