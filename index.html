@@ -3590,8 +3590,15 @@ function expandChartBars(sourceBars) {
         output.push(...pathToEnding(source, jumpStart, targetEnding));
         cursor = independentCodaStart;
       } else {
-        output.push(...pathToEndingAndFine(source, jumpStart, targetEnding));
-        cursor = terminalIndex + 1;
+        const endingPath = pathToEndingAndFine(source, jumpStart, targetEnding);
+        output.push(...endingPath);
+        // When the numbered ending is printed after the D.C./D.S. instruction,
+        // the ordinary tail pass would append that same ending a second time.
+        // Resume after the furthest source bar already emitted by the return
+        // path, while still respecting the instruction's written terminal.
+        const lastReturnedSource = endingPath.reduce((last, bar) =>
+          Math.max(last, Number.isInteger(bar._sourceIndex) ? bar._sourceIndex : -1), -1);
+        cursor = Math.max(terminalIndex + 1, lastReturnedSource + 1);
       }
       continue;
     }
@@ -4009,6 +4016,7 @@ function cloneForLinear(bar, sourceIndex) {
     ending: null,
     endingStart: false,
     endingEnd: false,
+    endMarkerSource: Boolean(bar.endMarker || bar.endMarkerSource),
     _sourceIndex: sourceIndex
   };
 }
@@ -4043,8 +4051,9 @@ function finishLinearBars(
     // been converted into linear order. Standalone To Coda/Coda marks remain
     // visible because no navigation route consumes them.
     if (removeConsumedNavigation) {
+      const keepFineWithEnd = Boolean(bar.endMarker || bar.endMarkerSource);
       bar.symbols = bar.symbols.filter((symbol) =>
-        !/^fine$/i.test(symbol) &&
+        (!/^fine$/i.test(symbol) || keepFineWithEnd) &&
         !/^segno$/i.test(symbol) &&
         !(suppressCodaNavigation && /^to coda$/i.test(symbol))
       );
@@ -4060,9 +4069,55 @@ function finishLinearBars(
 
     bar.final = false;
   }
+  // An END marker inside an ordinary repeat is a last-chorus instruction.
+  // Keep its source bar in every expanded pass, but display End only on the
+  // final occurrence reached by the linear route.
+  retainFinalEndMarkerOccurrences(result);
+  // A standalone Fine inside an ordinary repeat is a visual ending marker,
+  // not a navigation destination. Keep it only on the final occurrence. When
+  // Fine and End share a bar, Fine wins and must also survive a consumed
+  // D.C./D.S. route on that final occurrence.
+  if (!removeConsumedNavigation) retainFinalFineOccurrences(result);
+  else retainFinalFineOccurrences(result, (bar) => Boolean(bar.endMarker || bar.endMarkerSource));
   if (result.length) result[result.length - 1].final = true;
 
   return result;
+}
+
+function retainFinalFineOccurrences(bars, includeBar = () => true) {
+  const lastBySource = new Map();
+  bars.forEach((bar, index) => {
+    if (!includeBar(bar)) return;
+    if (!(bar.symbols || []).some((symbol) => /^fine$/i.test(symbol))) return;
+    const sourceIndex = Number.isInteger(bar._sourceIndex) ? bar._sourceIndex : index;
+    lastBySource.set(sourceIndex, index);
+  });
+
+  bars.forEach((bar, index) => {
+    if (!includeBar(bar)) return;
+    if (!(bar.symbols || []).some((symbol) => /^fine$/i.test(symbol))) return;
+    const sourceIndex = Number.isInteger(bar._sourceIndex) ? bar._sourceIndex : index;
+    if (lastBySource.get(sourceIndex) !== index) {
+      bar.symbols = bar.symbols.filter((symbol) => !/^fine$/i.test(symbol));
+    }
+  });
+}
+
+function retainFinalEndMarkerOccurrences(bars) {
+  const lastBySource = new Map();
+  bars.forEach((bar, index) => {
+    if (!bar.endMarker && !bar.endMarkerSource) return;
+    bar.endMarkerSource = true;
+    if (!bar.endMarker) return;
+    const sourceIndex = Number.isInteger(bar._sourceIndex) ? bar._sourceIndex : index;
+    lastBySource.set(sourceIndex, index);
+  });
+
+  bars.forEach((bar, index) => {
+    if (!bar.endMarker) return;
+    const sourceIndex = Number.isInteger(bar._sourceIndex) ? bar._sourceIndex : index;
+    if (lastBySource.get(sourceIndex) !== index) bar.endMarker = false;
+  });
 }
 return { expandChartBars, deriveEndingNumbers, analyseRepeatStructure, analyseNavigationStructure };
 })();
@@ -4603,7 +4658,7 @@ function parseChart(raw, initialTimeSignature = '4/4') {
       continue;
     }
     if (token === 'f') { pendingFermataCount += 1; i += 1; continue; }
-    if (token === 'U') { i += 1; continue; }
+    if (token === 'U') { current.endMarker = true; i += 1; continue; }
     if (token === 'x') {
       if (current.chords.length) push();
       current.repeatBar = true;
@@ -4805,7 +4860,8 @@ function newBar() {
     startRepeat: false, endRepeat: false, doubleStart: false, doubleEnd: false,
     final: false, repeatBar: false, repeatTwoBars: false, repeatTwoBarsContinuation: false,
     repeatCount: null, cellCount: 0, verticalSpace: 0,
-    timeSignature: null, meterGrouping: null, systemBreak: false, codaStart: false, codaEnd: false
+    timeSignature: null, meterGrouping: null, systemBreak: false, codaStart: false, codaEnd: false,
+    endMarker: false
   };
 }
 
@@ -5450,13 +5506,15 @@ function renderBar(bar, song, notation, options, { suppressTimeSignature = false
     ...(bar.symbols || []),
     ...(bar.displayDirectives || [])
   ].filter((symbol) => symbol !== 'coda');
+  const hasFineSymbol = symbols.some((symbol) => /^fine$/i.test(symbol));
   const staffDirectives = (Array.isArray(bar.texts) ? bar.texts : [])
     .filter(Boolean)
     .map(renderStaffDirective)
     .join('');
   const centerSymbols = symbols.filter(isCenteredSymbol).map(renderSymbol).join('');
   const leftSymbols = symbols.filter((symbol) => !isCenteredSymbol(symbol) && isLeftAlignedSymbol(symbol)).map(renderSymbol).join('') + staffDirectives;
-  const rightSymbols = symbols.filter((symbol) => !isCenteredSymbol(symbol) && !isLeftAlignedSymbol(symbol)).map(renderSymbol).join('');
+  const rightSymbols = symbols.filter((symbol) => !isCenteredSymbol(symbol) && !isLeftAlignedSymbol(symbol)).map(renderSymbol).join('')
+    + (bar.endMarker && !hasFineSymbol ? renderEndMarker() : '');
   const leftSymbolOffset = bar.codaStart ? 34 : 1;
   const rightSymbolOffset = bar.codaEnd ? 38 : ((bar.endRepeat || bar.final) ? 14 : 6);
   if (leftSymbols) classes.push('has-left-symbol');
@@ -5858,6 +5916,10 @@ function renderSymbol(symbol) {
   if (symbol === 'coda') return renderCodaSymbol();
   if (symbol === 'pause') return renderFermataSymbol();
   return `<span class="directive" data-fit-directive>${escapeHtml(symbol)}</span>`;
+}
+
+function renderEndMarker() {
+  return '<span class="directive end-marker" data-fit-directive title="End" aria-label="End">End</span>';
 }
 
 function renderCodaGlyph() {
