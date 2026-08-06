@@ -6012,6 +6012,18 @@ function currentSong() {
   return state.songs.find((song) => song.id === state.selectedId) ?? DEMO_SONG;
 }
 
+function searchDisplayTitle(song) {
+  return song?.source === 'demo'
+    ? `${song.title} (Demo) [See Help to Import Songs]`
+    : (song?.title || '');
+}
+
+function searchListTitle(song) {
+  return song?.source === 'demo'
+    ? `${song.title} (Demo)`
+    : (song?.title || '');
+}
+
 function render() {
   renderToolbar();
   renderSearchOptions();
@@ -6022,7 +6034,7 @@ function render() {
 
 function renderToolbar() {
   const song = currentSong();
-  if (!state.searchOpen) el.search.value = song.title;
+  if (!state.searchOpen) el.search.value = searchDisplayTitle(song);
   el.keyValue.textContent = transposeKey(song.key, state.semitones, state.settings.accidental, state.settings.minor);
   el.scale.value = String(state.settings.scale);
   el.scaleAuto.classList.toggle('selected', state.settings.scaleAuto);
@@ -6039,7 +6051,7 @@ function renderToolbar() {
 
 function renderSearchOptions() {
   const query = el.search.value.trim().toLocaleLowerCase();
-  const matchingSongs = state.songs.filter((song) => !query || song.title.toLocaleLowerCase().includes(query));
+  const matchingSongs = state.songs.filter((song) => !query || searchListTitle(song).toLocaleLowerCase().includes(query));
   const choices = matchingSongs.slice(0, SEARCH_RESULT_LIMIT);
   const hiddenCount = Math.max(0, matchingSongs.length - choices.length);
   if (state.searchActiveIndex >= choices.length) state.searchActiveIndex = choices.length - 1;
@@ -6048,7 +6060,7 @@ function renderSearchOptions() {
       const composer = displayComposer(song.composer);
       const secondary = composer || song.style || '';
       const active = index === state.searchActiveIndex;
-      return `<button id="search-option-${index}" type="button" role="option" aria-selected="${active}" class="${active ? 'active' : ''}" data-option-index="${index}" data-song-id="${escapeHtml(song.id)}"><strong>${escapeHtml(song.title)}</strong><span>${escapeHtml(secondary)}</span></button>`;
+      return `<button id="search-option-${index}" type="button" role="option" aria-selected="${active}" class="${active ? 'active' : ''}" data-option-index="${index}" data-song-id="${escapeHtml(song.id)}"><strong>${escapeHtml(searchListTitle(song))}</strong><span>${escapeHtml(secondary)}</span></button>`;
     }).join('') + (hiddenCount
       ? `<div class="empty-option search-limit-note">Showing the first ${SEARCH_RESULT_LIMIT} matches. Refine the search to see more.</div>`
       : '')
@@ -6073,7 +6085,7 @@ function openSearch() {
 function closeSearch({ restore = true } = {}) {
   state.searchOpen = false;
   state.searchActiveIndex = -1;
-  if (restore) el.search.value = currentSong().title;
+  if (restore) el.search.value = searchDisplayTitle(currentSong());
   renderSearchOptions();
 }
 
