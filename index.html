@@ -3336,7 +3336,7 @@ textarea:focus-visible {
 
         <div class="utility-group">
           <button id="fullscreen" class="icon-button utility" type="button" title="Fullscreen" aria-label="Fullscreen">⛶</button>
-          <a id="helpButton" class="icon-button utility help-button" href="./help.html" target="_blank" rel="noopener" title="ヘルプ" aria-label="ヘルプ">?</a>
+          <a id="helpButton" class="icon-button utility help-button" href="./help.html" target="_blank" rel="noopener" title="Help" aria-label="Help">?</a>
           <button id="settingsButton" class="icon-button utility" type="button" title="Settings" aria-label="Settings">⚙︎</button>
         </div>
         </div>
@@ -6014,7 +6014,7 @@ function currentSong() {
 
 function searchDisplayTitle(song) {
   return song?.source === 'demo'
-    ? `${song.title} (Demo) [See Help to Import Songs]`
+    ? `${song.title} (Demo) [See Help ? to Import Songs]`
     : (song?.title || '');
 }
 
