@@ -824,10 +824,6 @@ button {
     width: 70px;
   }
 
-  .scale-group .text-button {
-    display: none;
-  }
-
   .utility {
     min-width: 28px;
     padding-inline: 4px;
@@ -1870,9 +1866,9 @@ textarea:focus-visible {
   }
 
   #scale {
-    flex: 1 1 auto;
-    width: auto;
-    min-width: 90px;
+    flex: 0 0 76px;
+    width: 76px;
+    min-width: 76px;
   }
 }
 
@@ -2559,9 +2555,9 @@ textarea:focus-visible {
   }
 
   #scale {
-    flex: 1 1 auto;
-    width: auto;
-    min-width: 70px;
+    flex: 0 0 76px;
+    width: 76px;
+    min-width: 76px;
   }
 }
 
@@ -3244,6 +3240,24 @@ textarea:focus-visible {
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: none;
+  }
+
+  .toolbar-controls > * {
+    flex: 0 0 auto;
+  }
+
+  .scale-group {
+    flex: 0 0 auto;
+    min-width: max-content;
+  }
+
+  #scaleAuto {
+    flex: 0 0 auto;
+    display: inline-flex;
+    position: relative;
+    z-index: 5;
+    align-items: center;
+    justify-content: center;
   }
 
   .toolbar-controls::-webkit-scrollbar {
