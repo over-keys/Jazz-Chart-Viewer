@@ -3190,6 +3190,67 @@ textarea:focus-visible {
   opacity: 1;
 }
 
+@media (min-width: 821px) {
+  .toolbar-main {
+    flex: 1 1 260px;
+    min-width: 260px;
+  }
+
+  .toolbar-controls-shell {
+    flex: 0 0 auto;
+    min-width: max-content;
+  }
+
+  .toolbar-controls {
+    min-width: max-content;
+  }
+}
+
+@media (min-width: 821px) and (max-width: 1040px) {
+  :root {
+    --compact-toolbar-height: 76px;
+  }
+
+  .toolbar {
+    overflow: visible;
+    height: var(--compact-toolbar-height);
+    min-height: var(--compact-toolbar-height);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 32px 30px;
+    align-content: center;
+    gap: 4px;
+    padding: 5px 6px;
+  }
+
+  .toolbar-main {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .toolbar-controls-shell {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .toolbar-controls {
+    width: 100%;
+    min-width: 0;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+
+  .toolbar-controls::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @media (max-width: 820px) {
   .toolbar-controls-shell {
     width: 100%;
