@@ -112,7 +112,7 @@
           <tbody>
             <tr><th>Scale slider</th><td>Sets a manual chart size and turns Fit off.</td></tr>
             <tr><th>Fit</th><td>Fits the chart to the available viewport again.</td></tr>
-            <tr><th>Fullscreen</th><td>Enters or exits browser fullscreen where supported.</td></tr>
+            <tr><th>Fullscreen</th><td>Enters or exits fullscreen in supported desktop browsers. It is hidden on smartphones.</td></tr>
           </tbody>
         </table>
         <p>The layout keeps four measures per row, including on mobile screens, and scales the whole page to fit. Time-signature changes, rehearsal marks, double barlines, repeats, endings, Segno, Coda, and final barlines are preserved where present in the source chart.</p>
@@ -125,15 +125,14 @@
           <li>choose the display style for major, minor, half-diminished, and diminished chords;</li>
           <li>import more iReal data;</li>
           <li>delete all imported songs;</li>
-          <li>reset display settings to their defaults.</li>
         </ul>
-        <p><strong>Delete all songs</strong> removes the imported library but leaves the built-in demonstration chart. <strong>Reset settings</strong> does not delete imported songs.</p>
+        <p><strong>Delete all songs</strong> removes the imported library but leaves the built-in demonstration chart. Display settings can be changed individually for scale, key spelling, and chord notation.</p>
       </section>
 
       <section id="storage" class="help-section">
         <h2>Local storage and privacy</h2>
         <p>This application imports and displays chord-chart data selected by the user. Imported data is processed locally in the browser and is not uploaded to the application operator. Users are responsible for ensuring that they have the right to use the imported content.</p>
-        <p>Songs and settings are stored locally in IndexedDB for the exact site URL.</p>
+        <p>Songs are stored locally in IndexedDB for the exact site URL, while display settings are stored in localStorage for that URL.</p>
         <p>Re-import songs after clearing browser data, changing browser or device, or opening the viewer at a different domain or repository path. Private or incognito mode may discard the library when the private session ends.</p>
       </section>
 

@@ -15,7 +15,7 @@ No build step, package installation, or server-side processing is required.
 The Help button opens the Japanese guide by default. English help is available from that page and from Settings.
 
 1. Open the published site or `index.html`.
-2. Choose **Import**.
+2. Open **Settings**, then choose **Import iReal data**.
 3. Paste an `irealb://` or `irealbook://` shared string, or select a saved text or HTML file.
 4. Search for a song and choose Original or Expanded view.
 
