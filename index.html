@@ -3356,6 +3356,9 @@ textarea:focus-visible {
     left: 0;
     right: 0;
     width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    scrollbar-width: none;
     height: var(--compact-toolbar-height);
     min-height: var(--compact-toolbar-height);
     display: flex;
@@ -3364,6 +3367,10 @@ textarea:focus-visible {
     align-items: center;
     gap: 5px;
     padding: 4px 6px;
+  }
+
+  .toolbar::-webkit-scrollbar {
+    display: none;
   }
 
   .toolbar-main {
@@ -3379,16 +3386,16 @@ textarea:focus-visible {
   }
 
   .toolbar-controls-shell {
-    flex: 1 1 auto;
-    width: auto;
+    flex: 0 0 auto;
+    width: max-content;
+    overflow: visible;
   }
 
   .toolbar-controls {
     width: max-content;
-    min-width: 100%;
+    min-width: 0;
     justify-content: flex-start;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
+    overflow: visible;
   }
 
   .toolbar-controls > * {
