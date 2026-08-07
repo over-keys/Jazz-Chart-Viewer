@@ -3293,6 +3293,36 @@ textarea:focus-visible {
     grid-template-rows: 32px 30px;
   }
 }
+
+/* Let mobile Safari collapse its browser chrome when the chart is scrolled. */
+@media (max-width: 520px) {
+  html,
+  body {
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .app-shell {
+    height: auto;
+    min-height: 100svh;
+    display: block;
+  }
+
+  .toolbar {
+    position: sticky;
+    top: 0;
+  }
+
+  .chart-viewport {
+    height: auto;
+    min-height: calc(100svh - var(--compact-toolbar-height) + 48px);
+    overflow: visible;
+    padding-bottom: calc(48px + env(safe-area-inset-bottom));
+  }
+}
 </style>
 </head>
 <body>
