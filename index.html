@@ -2944,8 +2944,9 @@ textarea:focus-visible {
     overflow: hidden;
   }
 
+  /* The shell supplies the viewport; the non-shrinking controls overflow inside it. */
   .toolbar-controls {
-    width: max-content;
+    width: 100%;
     min-width: 0;
     justify-content: flex-start;
     overflow-x: auto;
