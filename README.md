@@ -17,7 +17,8 @@ The Help button opens the Japanese guide by default. English help is available f
 1. Open the published site or `index.html`.
 2. Open **Settings**, then choose **Import iReal data**.
 3. Paste an `irealb://` or `irealbook://` shared string, or select a saved text or HTML file.
-4. Search for a song and choose Original or Expanded view.
+4. Search by song title or composer and choose a result. Only the first 100 matches are shown.
+5. Choose Original or Expanded view.
 
 Imported song source data and display settings are stored in the browser. Source data is stored compactly and reparsed when the application starts.
 
